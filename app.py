@@ -314,7 +314,7 @@ def money(player_number):
     # TODO: tell the player how much money they have in the bank
     with shelve.open(player_state_location, writeback=True) as player_state_database:
         if player_number in player_state_database:
-            send_message(player_number, f"You have {player_state_database[player_number]['wager']} points!")
+            send_message(player_number, f"You have {player_state_database[player_number]['bank']} points!")
 
 @app.route("/unity", methods=["GET", "POST"])
 def unity_handler():
