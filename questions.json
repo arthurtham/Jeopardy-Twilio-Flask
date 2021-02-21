@@ -1,0 +1,16 @@
+{
+  "questions": [
+    {
+      "category": "History",
+      "question": "This person hosted Jeopardy for 38 years",
+      "choices": ["Alex Trebek", "Pat Sajak", "Drew Carey"],
+      "answer": "a"
+    },
+    {
+      "category": "Video Games",
+      "question": "This game takes place in space",
+      "choices": ["Fortnite", "Among Us", "Roblox"],
+      "answer": "b"
+    }
+  ]
+}

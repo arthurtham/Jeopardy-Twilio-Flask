@@ -1,0 +1,8 @@
+*.bak
+*.dat
+*.dir
+*.exe
+*.env
+.idea/
+venv/
+venv_pycharm/
