@@ -73,6 +73,7 @@ def create_game():
                 game_state_database[room_code] = {
                     "game_started": False,
                     "game_resolved": False,
+                    "game_wagered": False,
                     "category": question["category"],
                     "question": question["question"],
                     "answer_choices": question["choices"],
@@ -87,6 +88,30 @@ def get_question(room_code):
         entry = game_state_database[room_code]
         return entry["question"], entry["answer_choices"], entry["correct_answer"]
 
+
+def lock_wagers(room_code):
+    with shelve.open(game_state_location, writeback=True) as game_state_database:
+        entry = game_state_database[room_code]
+        print(entry)
+        if not entry["game_wagered"]:
+            entry["game_wagered"] = True
+            result = [entry["question"], entry["answer_choices"], entry["correct_answer"], entry["category"]]
+        else:
+            return "wagering already closed"
+
+    # Ask the question
+    with shelve.open(player_state_location, writeback=True) as player_state_database:
+        for _item in player_state_database:
+            player, entry = _item, player_state_database[_item]
+            if entry["game_id"] == room_code:
+                if entry["wager"] == -1:
+                    send_message(player, "You didn't wager anything and cannot participate in Final Jeopardy.")
+                else:
+                    send_message(player, f"Here's your FINAL JEOPARDY answer: " +
+                             f"{result[0]} \n\nA: {result[1][0]}\n" +
+                             f"B: {result[1][1]}\nC: {result[1][2]}\n\n" +
+                             f"Answer by typing 'answer [A, B, C]'.")
+    return "wagers closed"
 
 def start_game(room_code):
     with shelve.open(game_state_location, writeback=True) as game_state_database:
@@ -108,14 +133,11 @@ def start_game(room_code):
             for _item in player_state_database:
                 player, entry = _item, player_state_database[_item]
                 if entry["game_id"] == room_code:
-                    send_message(player, f"Here's your FINAL JEOPARDY answer: " +
-                                 f"{result[0]} \n\nA: {result[1][0]}\n" +
-                                 f"B: {result[1][1]}\nC: {result[1][2]}\n\n" +
-                                 f"Answer by typing 'answer [A, B, C]'.")
+                    send_message(player, f"The category is '{result[3]}'. How much would you like to wager from your {entry['bank']} points?\n\n(Respond with 'wager [number]')")
         result = f"{result[0]};{result[1][0]};{result[1][1]};{result[1][2]};{result[2]};{result[3]}"
     else:
         result = result[0]
-
+    print(result)
     return result
 
 
@@ -141,16 +163,20 @@ def resolve_game(room_code):
             player, entry = _item, player_state_database[_item]
             if entry["game_id"] == room_code:
                 if int(entry["wager"]) == -1:
-                    send_message(player, "You didn't wager anything!")
+                    #send_message(player, "You didn't wager anything!")
+                    pass
                 elif entry["answer"] == questions_entry[2]:
                     # TODO: correct answer
-                    send_message(player, f"You are correct! Congrats! You win {entry['wager']}!")
+                    player_state_database[player]["bank"] += int(entry["wager"])
+                    send_message(player, f"You are correct! Congrats! You win {entry['wager']} and now have {player_state_database[player]['bank']} points")
                     correct += 1
-                elif int(entry["answer"]) == 0:
-                    send_message(player, f"You didn't answer and lost {entry['wager']}.")
+                elif entry["answer"] == 0:
+                    player_state_database[player]["bank"] -= int(entry["wager"])
+                    send_message(player, f"You didn't answer and lost {entry['wager']}. You now have {player_state_database[player]['bank']} points.")
                 else:
                     # TODO: incorrect answer
-                    send_message(player, f"You are incorrect. Sorry. You lost {entry['wager']}.")
+                    player_state_database[player]["bank"] -= int(entry["wager"])
+                    send_message(player, f"You are incorrect. Sorry. You lost {entry['wager']} and now have {player_state_database[player]['bank']} points.")
                     incorrect += 1
 
                 if entry["answer"] == "a":
@@ -218,7 +244,7 @@ def play(player_number, game_id):
                 # Don't waste the bank
                 player_state_database[player_number]["game_id"] = game_id;
                 player_state_database[player_number]["wager"] = -1;
-                player_state_database[player_number]["answer"] = -1;
+                player_state_database[player_number]["answer"] = 0;
 
             send_message(player_number,
                          f"Joined game {player_state_database[player_number]['game_id']}! Please wait for the game to start...")
@@ -234,9 +260,24 @@ def reset(player_number):
             send_message(player_number, "The player hasn't played this game before!")
 
 
-def wager(player_number):
+def wager(player_number, amount_wagered):
     # TODO: tell the player to wager money
-    pass
+    with shelve.open(player_state_location, writeback=True) as player_state_database:
+        if player_number in player_state_database:
+            if player_state_database[player_number]["wager"] == -1:
+                amount_wagered = int(amount_wagered)
+                if amount_wagered > max(player_state_database[player_number]["bank"], 1000):
+                    send_message(player_number, "You can't wager more than what you have in your bank!")
+                elif amount_wagered < 0:
+                    send_message(player_number, "You can't wager a negative amount of points!")
+                else:
+                    player_state_database[player_number]["wager"] = amount_wagered
+                    send_message(player_number, "You made your wager. Waiting for other players...")
+            else:
+                send_message(player_number, "You already wagered!")
+        else:
+            send_message(player_number, "Try joining a game first!")
+    return "wager function"
 
 
 def answer(player_number, answer):
@@ -244,7 +285,9 @@ def answer(player_number, answer):
         player_entry = player_state_database[player_number]
         game_id = player_entry["game_id"]
         if is_game_active(game_id):
-            if player_entry["answer"] not in ["a", "b", "c", 0]:
+            if player_entry["wager"] == -1:
+                send_message(player_number, "You didn't wager anything and cannot participate in Final Jeopardy.")
+            elif player_entry["answer"] not in ["a", "b", "c", 0]:
                 send_message(player_number, "You already answered this question!")
             else:
                 # TODO: what is the convention for answering?
@@ -280,22 +323,24 @@ def unity_handler():
     print(command)
     result = ""
 
-    try:
-        if command == "start":
-            result = str(start_game(request.values.get("room_code")))
-        elif command == "get_count":
-            pass
-        elif command == "create":
-            result = create_game()
-        elif command == "resolve":
-            result = resolve_game(request.values.get("room_code"))
-        else:
-            result = "invalid"
+    #try:
+    if command == "start":
+        result = str(start_game(request.values.get("room_code")))
+    elif command == "get_count":
+        pass
+    elif command == "create":
+        result = create_game()
+    elif command == "closewager":
+        result = lock_wagers(request.values.get("room_code"))
+    elif command == "resolve":
+        result = resolve_game(request.values.get("room_code"))
+    else:
+        result = "invalid"
 
-        return result
-    except Exception as e:
-        print(e)
-        return "invalid"
+    return result
+    # except Exception as e:
+    #     print(e.__repr__())
+    #     return "invalid"
 
 
 @app.route("/twilio", methods=["POST"])
@@ -323,6 +368,11 @@ def request_handler():
             send_message(incoming_number, "Please type 'answer {A,B,C,D}'")
         else:
             answer(incoming_number, payload[1])
+    elif command == "wager":
+        if len(payload) != 2:
+            send_message(incoming_number, "Please type 'wager {number}'")
+        else:
+            wager(incoming_number, payload[1])
     else:
         send_message(incoming_number, "Uh oh! This command doesn't do anything.")
     # send_message(incoming_number, str(incoming_msg))
