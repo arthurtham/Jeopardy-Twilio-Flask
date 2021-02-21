@@ -35,11 +35,11 @@ twilio_number = os.environ.get("twilio_number")
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
 # Python shelf setup
-game_state_location = "./game_state"
-player_state_location = "./player_state"
+game_state_location = "/home/***REMOVED***/flask/game_state"
+player_state_location = "/home/***REMOVED***/flask/player_state"
 
 # Python questions setup
-questions_location = "./questions.json"
+questions_location = "/home/***REMOVED***/flask/questions.json"
 
 
 # Auxillary Twilio functions
@@ -57,8 +57,7 @@ def generate_question_from_json():
     data = ""
     with open(questions_location) as questions_file:
         data = json.load(questions_file)
-
-    return data["questions"][random.randint(0, len(data) - 1)]
+    return data["questions"][int(random.randrange(0, len(data["questions"])))]
 
 
 def create_game():
@@ -384,7 +383,7 @@ def request_handler():
 
 
 if __name__ == "__main__":
-    # from waitress import serve
-    # serve(app, host='0.0.0.0', port=5000)
+    from waitress import serve
+    serve(app, host='0.0.0.0', port=5000)
     # print(create_game())
-    app.run(host="localhost", port=5000)
+    #app.run(host="localhost", port=5000)

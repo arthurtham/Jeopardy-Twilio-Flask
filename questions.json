@@ -11,6 +11,42 @@
       "question": "This game takes place in space",
       "choices": ["Fortnite", "Among Us", "Roblox"],
       "answer": "b"
+    },
+    {
+	    "category": "Famous Americans",
+	    "question": "In 1785 he wrote that 'After fifty years service in public affairs', he wanted to 'make plenty of experiments'",
+	    "choices": ["Alexander Hamilton", "Benjamin Franklin", "George Washington"],
+	    "answer": "b"
+    },
+    {
+	    "category": "Musicians",
+	    "question": "This famed musician disappeared on December 16, 1944 & was never found",
+	    "choices": ["Billy Holiday","Perry Como","Glenn Miller"],
+	    "answer": "c"
+    },
+    {
+	    "category": "The Greek Alphabet",
+	    "question": "Of the 24 letters of the Greek alphabet, it's the only one that ends in an English letter that none of the others does",
+	    "choices": ["Rho", "Tau", "Mu"],
+	    "answer": "a"
+    },
+    {
+	    "category": "British Royalty",
+	    "question": "The only British monarch of the 20th century not to produce an heir",
+	    "choices": ["Henry VIII","Edward VIII","George III"],
+	    "answer": "b"
+    },
+    {
+	    "category": "Hackathons",
+	    "question": "This hackathon features four verticals, its design vertical encouraging hackers to define new ways for devices to connect with each other",
+	    "choices": ["HackUCI", "HackSC", "SDHacks"],
+	    "answer": "c"
+    },
+    {
+	    "category": "Universities",
+	    "question": "This university is home to more than 48,000 students and over 4,400 full-time faculty, and is located in the heart of one of the biggest metropolises in the world",
+	    "choices": ["USC", "UCLA", "NYU"],
+	    "answer": "a"
     }
   ]
 }
