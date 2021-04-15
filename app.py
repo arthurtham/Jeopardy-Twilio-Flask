@@ -25,9 +25,6 @@ app = Flask(__name__)
 CORS(app)
 
 # Twilio setup
-
-***REMOVED***
-***REMOVED***
 ACCOUNT_SID = os.environ.get("ACCOUNT_SID")
 AUTH_TOKEN = os.environ.get("AUTH_TOKEN")
 twilio_number = os.environ.get("twilio_number")
@@ -35,11 +32,11 @@ twilio_number = os.environ.get("twilio_number")
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
 # Python shelf setup
-game_state_location = "/home/***REMOVED***/flask/game_state"
-player_state_location = "/home/***REMOVED***/flask/player_state"
+game_state_location = "/home/**REMOVED**/flask/game_state"
+player_state_location = "/home/**REMOVED**/flask/player_state"
 
 # Python questions setup
-questions_location = "/home/***REMOVED***/flask/questions.json"
+questions_location = "/home/**REMOVED**/flask/questions.json"
 
 
 # Auxillary Twilio functions
